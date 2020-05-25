@@ -38,13 +38,48 @@
 
        WORKING-STORAGE SECTION.
            77 WS-STATUS-ARQUIVO    PIC X(02).
+           77 WS-MENSAGEM          PIC X(50) VALUE SPACES.
+           77 WS-TEMPORIZADOR      PIC 9(05) VALUE ZEROS.
 
        SCREEN SECTION.
 
        PROCEDURE DIVISION.
-       P-INTRO.
-           DISPLAY "Hello World!".
+      *************************
+      * Parágrafos principais *
+      *************************
+       P-ABERTURA.
+           OPEN I-O ARQUIVO
+           IF WS-STATUS-ARQUIVO NOT = "00"
+               IF WS-STATUS-ARQUIVO = "30"
+                   OPEN OUTPUT ARQUIVO
+                   MOVE "Arquivo sendo criado..." TO WS-MENSAGEM
+                   PERFORM P-MSG-ZERA THRU P-MSG-FIM
+                   CLOSE ARQUIVO
+                   GO TO P-ABERTURA
+               ELSE
+                   GO TO P-FIM-EXIT.
 
+      **************************
+      * Parágrafos de mensagem *
+      **************************
+       P-MSG-ZERA.
+           MOVE ZEROS TO WS-TEMPORIZADOR.
+
+       P-MSG-DISPLAY.
+           DISPLAY WS-MENSAGEM.
+
+       P-MSG-TEMPO.
+           ADD 1 TO WS-TEMPORIZADOR
+           IF WS-TEMPORIZADOR < 2500
+               GO TO P-MSG-TEMPO.
+
+       P-MSG-FIM.
+           MOVE SPACES TO WS-MENSAGEM
+           EXIT.
+           
+      **************************
+      * Parágrafos de mensagem *
+      **************************
        P-FIM-EXIT.
            EXIT PROGRAM.
 
