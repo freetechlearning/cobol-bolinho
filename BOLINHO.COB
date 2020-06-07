@@ -55,13 +55,14 @@
            77 WS-STATUS-ARQUIVO-MARGEM     PIC X(02).
            77 WS-MENSAGEM                  PIC X(50) VALUE SPACES.
            77 WS-TEMPORIZADOR              PIC 9(05) VALUE ZEROS.
+           77 WS-CODIGO-ESC                PIC X(02).
 
        SCREEN SECTION.
-       01 SS-TELA-MENSAGEM.
+       01 TELA-MENSAGEM.
            05 BLANK SCREEN BACKGROUND-COLOR 04 FOREGROUND-COLOR 15.
            05 PIC X(50) FROM WS-MENSAGEM LINE 13 COLUMN 15.
        
-       01 SS-TELA-MENU-PRINCIPAL.
+       01 TELA-MENU-PRINCIPAL.
            05 BLANK SCREEN BACKGROUND-COLOR 03 FOREGROUND-COLOR 00.
            05 VALUE "*----------------------------*" LINE 02 COLUMN 25.
            05 VALUE "|  .~~~O~~~.                 |" LINE 03 COLUMN 25.
@@ -82,6 +83,17 @@
            05 VALUE "ostrar lista completa"          LINE 16 COLUMN 21.
            05 VALUE "S" FOREGROUND-COLOR 15          LINE 17 COLUMN 20.
            05 VALUE "air"                            LINE 17 COLUMN 21.
+           05 PIC X TO WS-CODIGO-ESC LINE 20 COLUMN 60 AUTO.
+
+       01 TELA-SAIDA.
+           05 BLANK SCREEN BACKGROUND-COLOR 07 FOREGROUND-COLOR 15.
+           05 VALUE "Deseja realmente sair?"         LINE 10 COLUMN 29.
+           05 VALUE "Enter ou Tab - "                LINE 12 COLUMN 30.
+           05 VALUE "Sair"     FOREGROUND-COLOR 14   LINE 12 COLUMN 45.
+           05 VALUE "Esc - "                         LINE 14 COLUMN 28.
+           05 VALUE "Voltar ao programa"  FOREGROUND-COLOR 14
+                                                     LINE 14 COLUMN 34.
+           05 PIC XX TO WS-CODIGO-ESC LINE 20 COLUMN 60 AUTO.
 
        PROCEDURE DIVISION.
       *************************
@@ -115,6 +127,25 @@
        
        P-MENU-PRINCIPAL.
            
+           DISPLAY TELA-MENU-PRINCIPAL
+           ACCEPT TELA-MENU-PRINCIPAL.
+
+           IF WS-CODIGO-ESC = "C" OR "c"
+               PERFORM P-CAD
+           ELSE IF WS-CODIGO-ESC = "S" OR "s"
+               GO TO P-FIM-CONFIRMACAO
+           ELSE
+               MOVE "Opcao invalida!" TO WS-MENSAGEM
+               PERFORM P-MSG-ZERA THRU P-MSG-FIM.
+           GO TO P-MENU-PRINCIPAL.
+               
+      **************************
+      * Parágrafos de cadastro *
+      **************************
+       P-CAD.
+           MOVE "Paragrafo de cadastro" TO WS-MENSAGEM
+           PERFORM P-MSG-ZERA THRU P-MSG-FIM.
+
 
       **************************
       * Parágrafos de mensagem *
@@ -123,7 +154,7 @@
            MOVE ZEROS TO WS-TEMPORIZADOR.
 
        P-MSG-DISPLAY.
-           DISPLAY SS-TELA-MENSAGEM.
+           DISPLAY TELA-MENSAGEM.
 
        P-MSG-TEMPO.
            ADD 1 TO WS-TEMPORIZADOR
@@ -137,6 +168,18 @@
       *****************************
       * Parágrafos de Finalização *
       *****************************
+       P-FIM-CONFIRMACAO.
+           DISPLAY TELA-SAIDA
+           ACCEPT TELA-SAIDA
+           ACCEPT WS-CODIGO-ESC FROM ESCAPE KEY
+           IF WS-CODIGO-ESC = 00
+               GO TO P-FIM-FECHA-ARQUIVOS
+           ELSE IF WS-CODIGO-ESC = 01
+               GO TO P-MENU-PRINCIPAL
+           ELSE
+               MOVE "Opcao invalida!" TO WS-MENSAGEM
+               PERFORM P-MSG-ZERA THRU P-MSG-FIM.
+
        P-FIM-FECHA-ARQUIVOS.
            CLOSE ARQUIVO-ESTOQUE
            CLOSE ARQUIVO-MARGEM.
