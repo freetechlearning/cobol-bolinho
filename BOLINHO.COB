@@ -95,6 +95,26 @@
                                                      LINE 14 COLUMN 34.
            05 PIC XX TO WS-CODIGO-ESC LINE 20 COLUMN 60 AUTO.
 
+       01 TELA-CADASTRO.
+           05 BLANK SCREEN BACKGROUND-COLOR 03 FOREGROUND-COLOR 00.
+           05 VALUE "Cadastro de produto no estoque" LINE 02 COLUMN 25.
+           05 VALUE "___________________________________________________
+                    "_____________________________"  LINE 03 COLUMN 01.
+           05 VALUE "Nome do produto:"               LINE 06 COLUMN 12.
+           05 PIC X(30) USING NOME                   LINE 06 COLUMN 30.
+           05 VALUE "Data de validade:"              LINE 09 COLUMN 11.
+           05 PIC 99 USING DIA                       LINE 09 COLUMN 30.
+           05 VALUE "/"                              LINE 09 COLUMN 32.
+           05 PIC 99 USING MES                       LINE 09 COLUMN 33.
+           05 VALUE "/"                              LINE 09 COLUMN 35.
+           05 PIC 9999 USING ANO                     LINE 09 COLUMN 36.
+           05 VALUE "Valor de custo:"                LINE 12 COLUMN 13.
+           05 PIC 9(04)V99 USING VALOR-CUSTO         LINE 12 COLUMN 30.
+           05 VALUE "Valor de venda:"                LINE 15 COLUMN 13.
+           05 PIC 9(04)V99 USING VALOR-VENDA         LINE 15 COLUMN 30.
+           05 VALUE "Quantidade em estoque:"         LINE 18 COLUMN 06.
+           05 PIC 9(04) USING QTD-ESTOQUE            LINE 18 COLUMN 30.
+
        PROCEDURE DIVISION.
       *************************
       * Parágrafos Principais *
@@ -131,7 +151,7 @@
            ACCEPT TELA-MENU-PRINCIPAL.
 
            IF WS-CODIGO-ESC = "C" OR "c"
-               PERFORM P-CAD
+               PERFORM P-CAD-ZERA-VARS THRU P-CAD-DISPLAY
            ELSE IF WS-CODIGO-ESC = "S" OR "s"
                GO TO P-FIM-CONFIRMACAO
            ELSE
@@ -142,10 +162,14 @@
       **************************
       * Parágrafos de cadastro *
       **************************
-       P-CAD.
-           MOVE "Paragrafo de cadastro" TO WS-MENSAGEM
-           PERFORM P-MSG-ZERA THRU P-MSG-FIM.
+       P-CAD-ZERA-VARS.
+           MOVE SPACES TO NOME
+           MOVE ZEROS TO SKU VALIDADE VALOR-CUSTO VALOR-VENDA
+               QTD-ESTOQUE.
 
+       P-CAD-DISPLAY.
+           DISPLAY TELA-CADASTRO
+           ACCEPT TELA-CADASTRO.
 
       **************************
       * Parágrafos de mensagem *
@@ -178,7 +202,8 @@
                GO TO P-MENU-PRINCIPAL
            ELSE
                MOVE "Opcao invalida!" TO WS-MENSAGEM
-               PERFORM P-MSG-ZERA THRU P-MSG-FIM.
+               PERFORM P-MSG-ZERA THRU P-MSG-FIM
+               GO TO P-FIM-CONFIRMACAO.
 
        P-FIM-FECHA-ARQUIVOS.
            CLOSE ARQUIVO-ESTOQUE
