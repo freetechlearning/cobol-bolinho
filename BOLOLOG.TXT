@@ -10,6 +10,6 @@ Version 2.20 (C)Copyright Microsoft Corp. 1982-87
 
    No errors or warnings
 
-   Data area size =  1224
-   Code area size =  1706
+   Data area size =  1764
+   Code area size =  2546
 

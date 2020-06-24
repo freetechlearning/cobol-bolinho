@@ -56,6 +56,13 @@
            77 WS-MENSAGEM                  PIC X(50) VALUE SPACES.
            77 WS-TEMPORIZADOR              PIC 9(05) VALUE ZEROS.
            77 WS-CODIGO-ESC                PIC X(02).
+           
+           77 WS-CHAVE-VALIDACAO           PIC X VALUE "N".
+               88 WS-CHAVE-VALIDACAO-SIM         VALUE "N".
+               88 WS-CHAVE-VALIDACAO-NAO         VALUE "S".
+
+           77 WS-ANO-RESTO                 PIC 9.
+           77 WS-ANO-DIVISAO               PIC 9(04).
 
        SCREEN SECTION.
        01 TELA-MENSAGEM.
@@ -101,19 +108,26 @@
            05 VALUE "___________________________________________________
                     "_____________________________"  LINE 03 COLUMN 01.
            05 VALUE "Nome do produto:"               LINE 06 COLUMN 12.
-           05 PIC X(30) USING NOME                   LINE 06 COLUMN 30.
+           05 PIC X(30) USING NOME FOREGROUND-COLOR 14 
+                                                     LINE 06 COLUMN 29.
            05 VALUE "Data de validade:"              LINE 09 COLUMN 11.
-           05 PIC 99 USING DIA                       LINE 09 COLUMN 30.
-           05 VALUE "/"                              LINE 09 COLUMN 32.
-           05 PIC 99 USING MES                       LINE 09 COLUMN 33.
-           05 VALUE "/"                              LINE 09 COLUMN 35.
-           05 PIC 9999 USING ANO                     LINE 09 COLUMN 36.
+           05 PIC 99 USING DIA FOREGROUND-COLOR 14
+                                                     LINE 09 COLUMN 29.
+           05 VALUE "/"                              LINE 09 COLUMN 31.
+           05 PIC 99 USING MES FOREGROUND-COLOR 14  
+                                                     LINE 09 COLUMN 32.
+           05 VALUE "/"                              LINE 09 COLUMN 34.
+           05 PIC 9999 USING ANO FOREGROUND-COLOR 14
+                                                     LINE 09 COLUMN 35.
            05 VALUE "Valor de custo:"                LINE 12 COLUMN 13.
-           05 PIC 9(04)V99 USING VALOR-CUSTO         LINE 12 COLUMN 30.
+           05 PIC 9(04)V99 USING VALOR-CUSTO FOREGROUND-COLOR 14
+                                                     LINE 12 COLUMN 29.
            05 VALUE "Valor de venda:"                LINE 15 COLUMN 13.
-           05 PIC 9(04)V99 USING VALOR-VENDA         LINE 15 COLUMN 30.
+           05 PIC 9(04)V99 USING VALOR-VENDA FOREGROUND-COLOR 14
+                                                     LINE 15 COLUMN 29.
            05 VALUE "Quantidade em estoque:"         LINE 18 COLUMN 06.
-           05 PIC 9(04) USING QTD-ESTOQUE            LINE 18 COLUMN 30.
+           05 PIC 9(04) USING QTD-ESTOQUE FOREGROUND-COLOR 14
+                                                     LINE 18 COLUMN 29.
 
        PROCEDURE DIVISION.
       *************************
@@ -130,6 +144,9 @@
                    CLOSE ARQUIVO-ESTOQUE
                    GO TO P-ABERTURA-ARQUIVO-ESTOQUE
                ELSE
+                   MOVE "Erro na abertura do arquivo de estoque..."
+                       TO WS-MENSAGEM
+                   PERFORM P-MSG-ZERA THRU P-MSG-FIM
                    GO TO P-FIM-EXIT.
 
        P-ABERTURA-ARQUIVO-MARGEM.
@@ -143,6 +160,9 @@
                    CLOSE ARQUIVO-MARGEM
                    GO TO P-ABERTURA-ARQUIVO-MARGEM
                ELSE
+                   MOVE "Erro na abertura do arquivo de margens..."
+                       TO WS-MENSAGEM
+                   PERFORM P-MSG-ZERA THRU P-MSG-FIM
                    GO TO P-FIM-EXIT.
        
        P-MENU-PRINCIPAL.
@@ -170,6 +190,102 @@
        P-CAD-DISPLAY.
            DISPLAY TELA-CADASTRO
            ACCEPT TELA-CADASTRO.
+
+           PERFORM P-VALIDA-FORM
+           IF WS-CHAVE-VALIDACAO = "N" GO TO P-CAD-DISPLAY.
+       
+       P-CAD-SUCESSO.
+           MOVE "Registro gravado com sucesso!" TO WS-MENSAGEM
+           PERFORM P-MSG-ZERA THRU P-MSG-FIM.
+
+       P-CAD-SAIDA.
+           EXIT.
+       
+      ***************************
+      * Parágrafos de Validação *
+      ***************************
+       P-VALIDA-FORM.
+           
+           MOVE "S" TO WS-CHAVE-VALIDACAO
+
+           IF NOME EQUAL SPACES
+               MOVE "Erro: preencha o nome." TO WS-MENSAGEM
+               PERFORM P-MSG-ZERA THRU P-MSG-FIM
+               MOVE "N" TO WS-CHAVE-VALIDACAO.
+
+           IF DIA EQUAL ZEROS
+               MOVE "Erro: preencha o dia." TO WS-MENSAGEM
+               PERFORM P-MSG-ZERA THRU P-MSG-FIM
+               MOVE "N" TO WS-CHAVE-VALIDACAO.
+           
+           IF MES EQUAL ZEROS
+               MOVE "Erro: preencha o mes." TO WS-MENSAGEM
+               PERFORM P-MSG-ZERA THRU P-MSG-FIM
+               MOVE "N" TO WS-CHAVE-VALIDACAO.
+           
+           IF ANO EQUAL ZEROS
+               MOVE "Erro: preencha o ano." TO WS-MENSAGEM
+               PERFORM P-MSG-ZERA THRU P-MSG-FIM
+               MOVE "N" TO WS-CHAVE-VALIDACAO.
+           
+           IF VALOR-CUSTO EQUAL ZEROS
+               MOVE "Erro: preencha o valor de custo." TO WS-MENSAGEM
+               PERFORM P-MSG-ZERA THRU P-MSG-FIM
+               MOVE "N" TO WS-CHAVE-VALIDACAO.
+           
+           IF VALOR-VENDA EQUAL ZEROS
+               MOVE "Erro: preencha o valor de venda." TO WS-MENSAGEM
+               PERFORM P-MSG-ZERA THRU P-MSG-FIM
+               MOVE "N" TO WS-CHAVE-VALIDACAO.
+           
+           IF MES > 12
+               MOVE "Erro: o ano tem no maximo 12 meses." TO WS-MENSAGEM
+               PERFORM P-MSG-ZERA THRU P-MSG-FIM
+               MOVE "N" TO WS-CHAVE-VALIDACAO.
+
+           IF (MES = 01 OR
+               MES = 03 OR
+               MES = 05 OR
+               MES = 07 OR
+               MES = 08 OR
+               MES = 10 OR
+               MES = 12) AND
+               DIA > 31
+               MOVE "Erro: esse mes tem no maximo 31 dias."
+                   TO WS-MENSAGEM
+               PERFORM P-MSG-ZERA THRU P-MSG-FIM
+               MOVE "N" TO WS-CHAVE-VALIDACAO.
+
+           IF (MES = 04 OR
+               MES = 06 OR
+               MES = 09 OR
+               MES = 11) AND
+               DIA > 30
+               MOVE "Erro: esse mes tem no maximo 30 dias."
+                   TO WS-MENSAGEM
+               PERFORM P-MSG-ZERA THRU P-MSG-FIM
+               MOVE "N" TO WS-CHAVE-VALIDACAO.
+
+            DIVIDE ANO BY 4 GIVING WS-ANO-DIVISAO REMAINDER WS-ANO-RESTO
+
+            IF MES = 02 AND
+               WS-ANO-RESTO = 0 AND
+               DIA > 29
+               MOVE "Erro: esse mes tem no maximo 29 dias."
+                   TO WS-MENSAGEM
+               PERFORM P-MSG-ZERA THRU P-MSG-FIM
+               MOVE "N" TO WS-CHAVE-VALIDACAO.
+
+            IF MES = 02 AND
+               WS-ANO-RESTO NOT = 0 AND
+               DIA > 28
+               MOVE "Erro: esse mes tem no maximo 28 dias."
+                   TO WS-MENSAGEM
+               PERFORM P-MSG-ZERA THRU P-MSG-FIM
+               MOVE "N" TO WS-CHAVE-VALIDACAO.
+
+            
+                   
 
       **************************
       * Parágrafos de mensagem *
